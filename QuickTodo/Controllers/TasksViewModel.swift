@@ -31,6 +31,8 @@ struct TasksViewModel {
     let sceneCoordinator: SceneCoordinatorType
     let taskService: TaskServiceType
 
+    lazy var statistics: Observable<TaskStatistics> = self.taskService.statistics()
+
     init(taskService: TaskServiceType, coordinator: SceneCoordinatorType) {
         self.taskService = taskService
         self.sceneCoordinator = coordinator
@@ -96,4 +98,12 @@ struct TasksViewModel {
             return this.sceneCoordinator.transition(to: Scene.editTask(editViewModel), type: .modal)
         }
     }(self)
+
+    //challenge 1
+    lazy var deleteAction: Action<TaskItem, Void> = { (service: TaskServiceType) in
+        return Action { item in
+            return service.delete(task: item)
+        }
+    }(self.taskService)
+
 }

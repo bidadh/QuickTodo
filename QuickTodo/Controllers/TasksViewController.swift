@@ -33,7 +33,6 @@ class TasksViewController: UIViewController, BindableType {
     @IBOutlet var newTaskButton: UIBarButtonItem!
 
     var viewModel: TasksViewModel!
-
     let dataSource = RxTableViewSectionedAnimatedDataSource<TaskSection>()
 
     override func viewDidLoad() {
@@ -42,8 +41,9 @@ class TasksViewController: UIViewController, BindableType {
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 60
 
-
         configureDataSource()
+
+        setEditing(true, animated: false)
     }
 
     func bindViewModel() {
@@ -59,12 +59,30 @@ class TasksViewController: UIViewController, BindableType {
                 }
                 .subscribe(viewModel.editAction.inputs)
                 .addDisposableTo(rx_disposeBag)
+
+        //challenge 1
+        tableView.rx.itemDeleted
+                .map { [unowned self] indexPath in
+                    try! self.tableView.rx.model(at: indexPath)
+                }
+                .subscribe(viewModel.deleteAction.inputs)
+                .addDisposableTo(rx_disposeBag)
+
+        //challenge 2
+        viewModel.statistics
+                .subscribe(onNext: { [weak self] stats in
+                    let total = stats.todo + stats.done
+                    self?.statisticsLabel.text = "\(total) tasks, \(stats.todo) due."
+                })
+                .addDisposableTo(rx_disposeBag)
+
     }
 
     fileprivate func configureDataSource() {
         dataSource.titleForHeaderInSection = { dataSource, index in
             dataSource.sectionModels[index].model
         }
+
         dataSource.configureCell = {
             [weak self] dataSource, tableView, indexPath, item in
             let cell = tableView.dequeueReusableCell(withIdentifier: "TaskItemCell", for: indexPath) as! TaskItemTableViewCell
@@ -72,6 +90,10 @@ class TasksViewController: UIViewController, BindableType {
                 cell.configure(with: item, action: strongSelf.viewModel.onToggle(task: item))
             }
             return cell
+        }
+
+        dataSource.canEditRowAtIndexPath = { _ in
+            true
         }
     }
 
