@@ -85,4 +85,15 @@ struct TasksViewModel {
                     }
         }
     }
+
+    lazy var editAction: Action<TaskItem, Void> = { this in
+        return Action { task in
+            let editViewModel = EditTaskViewModel(
+                    task: task,
+                    coordinator: this.sceneCoordinator,
+                    updateAction: this.onUpdateTitle(task: task)
+            )
+            return this.sceneCoordinator.transition(to: Scene.editTask(editViewModel), type: .modal)
+        }
+    }(self)
 }
