@@ -27,23 +27,43 @@ import Action
 import NSObject_Rx
 
 class TasksViewController: UIViewController, BindableType {
-  
-  @IBOutlet var tableView: UITableView!
-  @IBOutlet var statisticsLabel: UILabel!
-  @IBOutlet var newTaskButton: UIBarButtonItem!
-  
-  var viewModel: TasksViewModel!
-  
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    
-    tableView.rowHeight = UITableViewAutomaticDimension
-    tableView.estimatedRowHeight = 60
-    
-  }
-  
-  func bindViewModel() {
-    
-  }
-  
+
+    @IBOutlet var tableView: UITableView!
+    @IBOutlet var statisticsLabel: UILabel!
+    @IBOutlet var newTaskButton: UIBarButtonItem!
+
+    var viewModel: TasksViewModel!
+
+    let dataSource = RxTableViewSectionedAnimatedDataSource<TaskSection>()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 60
+
+
+        configureDataSource()
+    }
+
+    func bindViewModel() {
+        viewModel.sectionedItems
+                .bindTo(tableView.rx.items(dataSource: dataSource))
+                .addDisposableTo(self.rx_disposeBag)
+    }
+
+    fileprivate func configureDataSource() {
+        dataSource.titleForHeaderInSection = { dataSource, index in
+            dataSource.sectionModels[index].model
+        }
+        dataSource.configureCell = {
+            [weak self] dataSource, tableView, indexPath, item in
+            let cell = tableView.dequeueReusableCell(withIdentifier: "TaskItemCell", for: indexPath) as! TaskItemTableViewCell
+            if let strongSelf = self {
+                cell.configure(with: item, action: strongSelf.viewModel.onToggle(task: item))
+            }
+            return cell
+        }
+    }
+
 }
