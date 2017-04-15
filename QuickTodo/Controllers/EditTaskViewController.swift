@@ -28,20 +28,25 @@ import NSObject_Rx
 
 class EditTaskViewController: UIViewController, BindableType {
 
-  @IBOutlet var titleView: UITextView!
-  @IBOutlet var okButton: UIBarButtonItem!
-  @IBOutlet var cancelButton: UIBarButtonItem!
+    @IBOutlet var titleView: UITextView!
+    @IBOutlet var okButton: UIBarButtonItem!
+    @IBOutlet var cancelButton: UIBarButtonItem!
 
-  var viewModel: EditTaskViewModel!
+    var viewModel: EditTaskViewModel!
 
-  func bindViewModel() {
-    titleView.text = viewModel.itemTitle
+    func bindViewModel() {
+        titleView.text = viewModel.itemTitle
 
-  }
+        cancelButton.rx.action = viewModel.onCancel
+        okButton.rx.tap
+                .withLatestFrom(titleView.rx.text.orEmpty)
+                .subscribe(viewModel.onUpdate.inputs)
+                .addDisposableTo(rx_disposeBag)
+    }
 
-  override func viewDidAppear(_ animated: Bool) {
-    super.viewDidAppear(animated)
-    titleView.becomeFirstResponder()
-  }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        titleView.becomeFirstResponder()
+    }
 
 }
